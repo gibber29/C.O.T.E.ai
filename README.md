@@ -15,7 +15,8 @@ C.O.T.E.ai bridges the gap between traditional teaching and personal AI tutoring
 
 ### 🎓 Student Portal
 - **Live Document Summaries**: Instant access to key takeaways from uploaded materials.
-- **Summarized Flashcards**: Personalized cards generated for "last-second revision" and efficient active recall.
+- **Summarized Flashcards**: Personalized cards generated for "last-second revision" and efficient active recall. Addionally contain the feature of the student being able to select 
+the language that they want to read it in for having inclusivity for diverse linguistics as is the case in our country
 - **Gamified Assessment System**: 
   - Three progressive difficulty levels (Recall, Apply, Create) with XP-based rewards
   - Real-time feedback with instant XP notifications (+10 XP for correct answers)
@@ -27,7 +28,8 @@ C.O.T.E.ai bridges the gap between traditional teaching and personal AI tutoring
   - Personal comment/note system for self-reflection and learning
   - Global mistakes view aggregating errors from all classroom sessions
 - **Live Progress Dashboard**: Track your XP growth, weekly improvement metrics, and review recent mistakes
-- **C.O.T.E.ai Doubt Assistant**: A premium, glassmorphism-styled floating chatbot for instant doubt clarification using RAG.
+- **C.O.T.E.ai Doubt Assistant**: A premium, glassmorphism-styled floating chatbot for instant doubt clarification using RAG. Tuned to the needs of the children
+focuses on giving the formal definition from the context along with analogies, analogies, and brain teasers for better building of intution among the students. Sole motive is to be able to erradicate the culture of rote learning
 
 ### Working demonstration of the application:
 -https://drive.google.com/drive/folders/1OztcflZcjAxdiGdIXdnaCSp2AGUkW6iZ
