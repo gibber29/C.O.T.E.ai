@@ -1,35 +1,26 @@
 import React, { useState } from 'react';
 import {
     Users,
-    ChevronRight,
     ArrowLeft,
     GraduationCap,
-    Clock,
-    Filter,
     TrendingUp,
     AlertCircle,
     PlayCircle,
-    ArrowRight
+    ArrowRight,
+    Clock,
+    ChevronRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Topic } from '../App';
 import { ActivityGraph } from './ActivityGraph';
 import { useActivityTracker } from '../hooks/useActivityTracker';
+import { TeacherAnalyticsDashboard } from './TeacherAnalyticsDashboard';
 
 interface StudentProgressViewProps {
     onCreateClass: (name: string, batch?: string, grade?: string) => string;
     topics: Topic[];
     userRole: 'teacher' | 'student';
 }
-
-
-const MOCK_STUDENTS = [
-    { id: '1', name: 'Alex Johnson', progress: 85, lastActive: '2 mins ago', status: 'Active', hours: 12.5 },
-    { id: '2', name: 'Sarah Williams', progress: 72, lastActive: '15 mins ago', status: 'Active', hours: 8.2 },
-    { id: '3', name: 'Michael Chen', progress: 94, lastActive: '1 hour ago', status: 'Idle', hours: 15.6 },
-    { id: '4', name: 'Emily Davis', progress: 45, lastActive: '3 hours ago', status: 'Idle', hours: 4.8 },
-    { id: '5', name: 'David Miller', progress: 100, lastActive: 'Yesterday', status: 'Completed', hours: 22.1 },
-];
 
 export const StudentProgressView: React.FC<StudentProgressViewProps> = ({ onCreateClass, topics, userRole }) => {
     const { weeklyLogs } = useActivityTracker();
@@ -262,106 +253,27 @@ export const StudentProgressView: React.FC<StudentProgressViewProps> = ({ onCrea
 
     if (selectedClass) {
         return (
-            <div className="p-6 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <header className="flex items-center justify-between">
-                    <div className="space-y-1">
-                        <button
-                            onClick={() => setSelectedClassId(null)}
-                            className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors mb-2"
-                        >
-                            <ArrowLeft size={16} /> Back to Classes
-                        </button>
-                        <h2 className="text-3xl font-black">{selectedClass.title}</h2>
-                        <p className="text-muted-foreground">Detailed student performance and engagement metrics.</p>
-                    </div>
-                    <div className="flex gap-3">
-                        <button className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-xl text-sm font-bold hover:bg-accent transition-all">
-                            <Filter size={16} /> Filter
-                        </button>
-                    </div>
-                </header>
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div className="p-6 bg-card border border-border rounded-3xl space-y-2">
-                        <p className="text-sm text-muted-foreground font-bold uppercase tracking-wider">Average Progress</p>
-                        <p className="text-4xl font-black text-primary">79.2%</p>
-                    </div>
-                    <div className="p-6 bg-card border border-border rounded-3xl space-y-2">
-                        <p className="text-sm text-muted-foreground font-bold uppercase tracking-wider">Active Students</p>
-                        <p className="text-4xl font-black text-green-500">5 / 5</p>
-                    </div>
-                    <div className="p-6 bg-card border border-border rounded-3xl space-y-2">
-                        <p className="text-sm text-muted-foreground font-bold uppercase tracking-wider">Total Active Time</p>
-                        <p className="text-4xl font-black text-orange-500">63.2h</p>
-                    </div>
-                    <div className="p-6 bg-card border border-border rounded-3xl space-y-2">
-                        <p className="text-sm text-muted-foreground font-bold uppercase tracking-wider">Status</p>
-                        <p className="text-4xl font-black text-blue-500">Active</p>
+            <div className="h-full flex flex-col bg-background animate-in fade-in">
+                <div className="p-6 border-b border-border flex items-center gap-4">
+                    <button
+                        onClick={() => setSelectedClassId(null)}
+                        className="p-2 hover:bg-accent rounded-full transition-all hover:scale-110 active:scale-90"
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
+                    <div>
+                        <h2 className="text-2xl font-black">Class Insights: {selectedClass.title}</h2>
+                        <p className="text-sm text-muted-foreground font-medium">Analytics and student performance metrics</p>
                     </div>
                 </div>
-
-                <div className="bg-card border border-border rounded-3xl overflow-hidden shadow-xl shadow-primary/5">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="border-b border-border bg-muted/30">
-                                <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-muted-foreground">Student Name</th>
-                                <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-muted-foreground">Progress</th>
-                                <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-muted-foreground">Active Hours</th>
-                                <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-muted-foreground">Last Active</th>
-                                <th className="px-6 py-4 text-xs font-black uppercase tracking-widest text-muted-foreground">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {MOCK_STUDENTS.map(student => (
-                                <tr key={student.id} className="hover:bg-muted/10 transition-colors group">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center text-primary font-black uppercase">
-                                                {student.name.split(' ').map(n => n[0]).join('')}
-                                            </div>
-                                            <span className="font-bold">{student.name}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="space-y-1.5 w-40">
-                                            <div className="flex justify-between items-center text-[10px] font-black uppercase text-muted-foreground">
-                                                <span>Progress</span>
-                                                <span>{student.progress}%</span>
-                                            </div>
-                                            <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                                                <div
-                                                    className="h-full bg-primary transition-all duration-500"
-                                                    style={{ width: `${student.progress}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 font-bold text-orange-500">
-                                        <div className="flex items-center gap-2">
-                                            <Clock size={16} />
-                                            {student.hours}h
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-muted-foreground font-medium">
-                                        {student.lastActive}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${student.status === 'Active' ? 'bg-green-500/10 text-green-500' :
-                                            student.status === 'Completed' ? 'bg-primary/10 text-primary' :
-                                                'bg-muted text-muted-foreground'
-                                            }`}>
-                                            {student.status}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                <div className="flex-1 overflow-y-auto p-8">
+                    <TeacherAnalyticsDashboard sessionId={selectedClass.id} />
                 </div>
             </div>
         );
     }
 
+    // Teacher View - Class List
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <header>
@@ -405,7 +317,7 @@ export const StudentProgressView: React.FC<StudentProgressViewProps> = ({ onCrea
                             <div className="h-2 bg-muted rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-primary transition-all duration-500 group-hover:bg-blue-500"
-                                    style={{ width: `0%` }}
+                                    style={{ width: `0 % ` }}
                                 />
                             </div>
                         </div>

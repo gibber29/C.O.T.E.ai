@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Trophy, Lock, Star, ChevronRight, Map, BookOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AssessmentModal } from './AssessmentModal';
+import { RemedialModal } from './RemedialModal';
 import { MistakesView } from './MistakesView';
+import { TeacherAssessmentPreview } from './TeacherAssessmentPreview';
 
 interface AssessmentPathViewProps {
     userRole: 'teacher' | 'student' | null;
@@ -11,18 +13,24 @@ interface AssessmentPathViewProps {
 interface Progress {
     xp: number;
     unlocked_level: number;
+    current_chapter_title?: string;
+    next_chapter_title?: string;
+    cooldown_remaining?: number;
+    remedial_plan?: any;
     history: any[];
 }
 
-export const AssessmentPathView: React.FC<AssessmentPathViewProps> = () => {
+export const AssessmentPathView: React.FC<AssessmentPathViewProps> = ({ userRole }) => {
     const [classrooms, setClassrooms] = useState<string[]>([]);
     const [selectedClassroom, setSelectedClassroom] = useState<string | null>(null);
     const [progress, setProgress] = useState<Progress | null>(null);
     const [view, setView] = useState<'quest' | 'mistakes'>('quest');
 
+
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+    const [isRemedialOpen, setIsRemedialOpen] = useState(false);
 
     // Fetch Classrooms on mount
     useEffect(() => {
@@ -52,6 +60,11 @@ export const AssessmentPathView: React.FC<AssessmentPathViewProps> = () => {
     };
 
     const handleLevelClick = (level: number) => {
+        if (progress?.cooldown_remaining && progress.cooldown_remaining > 0 && level === progress.unlocked_level) {
+            setIsRemedialOpen(true);
+            return;
+        }
+
         if (progress && progress.unlocked_level >= level) {
             setSelectedLevel(level);
             setIsModalOpen(true);
@@ -63,12 +76,17 @@ export const AssessmentPathView: React.FC<AssessmentPathViewProps> = () => {
         fetchProgress(); // Refresh to see new XP/Levels
     };
 
+    // If teacher, show TeacherAssessmentPreview directly
+    if (userRole === 'teacher' && selectedClassroom) {
+        return <TeacherAssessmentPreview sessionId={selectedClassroom} onBack={() => setSelectedClassroom(null)} />;
+    }
+
     // --- VIEW: CLASSROOM SELECTION ---
     if (!selectedClassroom) {
         return (
             <div className="p-8 max-w-7xl mx-auto">
                 <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-black bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                    <h1 className="text-3xl font-black text-foreground">
                         Select a Classroom Quest
                     </h1>
                     <div className="flex bg-muted p-1 rounded-xl">
@@ -140,7 +158,13 @@ export const AssessmentPathView: React.FC<AssessmentPathViewProps> = () => {
                     <h2 className="text-2xl font-black text-primary dark:text-purple-400">
                         Artificial Intelligence
                     </h2>
-                    <div className="flex items-center gap-4 mt-1">
+                    {progress?.current_chapter_title && (
+                        <div className="flex items-center gap-3 mt-3 text-primary bg-primary/10 px-4 py-2 rounded-xl w-fit border border-primary/20">
+                            <BookOpen size={20} />
+                            <span className="font-black text-lg">Current Quest: {progress.current_chapter_title}</span>
+                        </div>
+                    )}
+                    <div className="flex items-center gap-4 mt-4">
                         <button
                             onClick={() => setView('quest')}
                             className={`text-sm font-bold px-3 py-1 rounded-full transition-all ${view === 'quest' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-accent'}`}
@@ -156,6 +180,14 @@ export const AssessmentPathView: React.FC<AssessmentPathViewProps> = () => {
                     </div>
                 </div>
                 <div className="flex items-center gap-4">
+                    {progress?.next_chapter_title && (
+                        <div className="hidden md:flex flex-col items-end mr-4 opacity-70">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Up Next</span>
+                            <span className="text-xs font-bold flex items-center gap-1">
+                                <Lock size={10} /> {progress.next_chapter_title}
+                            </span>
+                        </div>
+                    )}
                     <div className="flex items-center gap-2 bg-yellow-500/10 text-yellow-600 px-4 py-2 rounded-full font-bold border border-yellow-500/20">
                         <Star className="fill-current" size={18} />
                         <span>{progress?.xp || 0} XP</span>
@@ -180,6 +212,7 @@ export const AssessmentPathView: React.FC<AssessmentPathViewProps> = () => {
                         unlocked={true}
                         currentLevel={progress?.unlocked_level || 1}
                         onClick={() => handleLevelClick(1)}
+                        isRemedial={(progress?.cooldown_remaining || 0) > 0 && (progress?.unlocked_level || 1) === 1}
                     />
 
                     {/* Level 2 Node */}
@@ -190,6 +223,7 @@ export const AssessmentPathView: React.FC<AssessmentPathViewProps> = () => {
                         unlocked={(progress?.unlocked_level || 1) >= 2}
                         currentLevel={progress?.unlocked_level || 1}
                         onClick={() => handleLevelClick(2)}
+                        isRemedial={(progress?.cooldown_remaining || 0) > 0 && (progress?.unlocked_level || 1) === 2}
                     />
 
                     {/* Level 3 Node */}
@@ -201,6 +235,7 @@ export const AssessmentPathView: React.FC<AssessmentPathViewProps> = () => {
                         currentLevel={progress?.unlocked_level || 1}
                         onClick={() => handleLevelClick(3)}
                         isLast
+                        isRemedial={(progress?.cooldown_remaining || 0) > 0 && (progress?.unlocked_level || 1) === 3}
                     />
                 </div>
             ) : (
@@ -219,11 +254,19 @@ export const AssessmentPathView: React.FC<AssessmentPathViewProps> = () => {
                     onComplete={handleQuizComplete}
                 />
             )}
+            {progress?.remedial_plan && (
+                <RemedialModal
+                    isOpen={isRemedialOpen}
+                    onClose={() => setIsRemedialOpen(false)}
+                    plan={progress.remedial_plan}
+                    cooldownRemaining={progress.cooldown_remaining || 0}
+                />
+            )}
         </div>
     );
 };
 
-const LevelNode = ({ level, title, desc, unlocked, currentLevel, onClick }: any) => {
+const LevelNode = ({ level, title, desc, unlocked, currentLevel, onClick, isRemedial }: any) => {
     const isCompleted = currentLevel > level;
     const isActive = currentLevel === level;
 
@@ -250,10 +293,15 @@ const LevelNode = ({ level, title, desc, unlocked, currentLevel, onClick }: any)
                 )}
             </motion.button>
 
-            <div className="mt-4 bg-card px-6 py-3 rounded-xl border border-border shadow-sm">
+            <div className={`mt-4 bg-card px-6 py-3 rounded-xl border shadow-sm ${isRemedial ? "border-red-500 bg-red-500/5" : "border-border"}`}>
                 <h3 className="font-bold text-lg">{title}</h3>
                 <p className="text-xs text-muted-foreground mt-1">{desc}</p>
-                {unlocked && (
+                {isRemedial && (
+                    <div className="mt-2 text-xs font-bold text-red-500 animate-pulse uppercase tracking-wider">
+                        ⚠️ Remedial Mode Active
+                    </div>
+                )}
+                {unlocked && !isRemedial && (
                     <div className="mt-2 text-xs font-semibold text-primary uppercase tracking-wider">
                         {isCompleted ? "Completed" : "Available"}
                     </div>

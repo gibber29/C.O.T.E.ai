@@ -44,25 +44,27 @@ Rules for your response:
    - "summary": The concise revision notes for that topic.
 4. **Style**: Use bullet points and bold text for key terms within the summary.
 5. **JSON ONLY**: Your entire response MUST be a valid JSON object. Do not include any markdown formatting like ```json ... ``` tags.
-6. **Language Rule**: The summary must be written in the **Target Language** specified (English, Hindi, Telugu, or Hinglish).
-   - If **Hindi** or **Telugu** is selected: Use **Native Scripture** (Devanagari/Telugu). Keep technical terms in English.
-   - If **Hinglish** is selected: Use **English alphabets (Roman script)** for the entire summary. The sentences should use **Hindi for explanation and grammar**, but keep all **technical terms intact in English**.
-     - **Example**: "Neural Network ek layered architecture hai jo data patterns ko identify karne mein help karta hai."
-   - If **English** is selected: The entire summary must be in **English**.
-   - Technical terms should never be translated.
+6. **STRICT LANGUAGE & SCRIPT RULE**:
+   - If **Hindi** is selected: You MUST use **Devanagari script (हिन्दी)** for all explanations. Do NOT use Roman script (English alphabets) for Hindi sentences.
+   - If **Telugu** is selected: You MUST use **Telugu script (తెలుగు)** for all explanations. Do NOT use Roman script (English alphabets) for Telugu sentences. This is CRITICAL.
+   - If **Hinglish** is selected: Use **English alphabets (Roman script)** for the entire summary.
+   - If **English** is selected: Use English.
+   - **Technical Terms**: Keep all technical terms, technical definitions, and proper nouns in **English** (Roman script) even when writing in Hindi or Telugu script.
+     - *Example (Hindi)*: "Neural Network एक कम्प्यूटर सिस्टम है..."
+     - *Example (Telugu)*: "Neural Network అనేది ఒక కంప్యూటర్ సిస్టమ్..."
 """
 
 def generate_flashcards(session_id: str, language: str = "english"):
     """
     Generates topic-wise revision summaries from the ingested materials of a session.
     """
-    cache_name = f"flashcards_v7_{language.lower()}.json"
+    cache_name = f"flashcards_v9_{language.lower()}.json"
     flashcard_cache_path = os.path.join("uploads", session_id, cache_name)
     
     # Check if already generated for this language
     if os.path.exists(flashcard_cache_path):
         try:
-            with open(flashcard_cache_path, "r") as f:
+            with open(flashcard_cache_path, "r", encoding="utf-8") as f:
                 return json.load(f)["flashcards"]
         except Exception as e:
             print(f"⚠️ Error reading flashcard cache: {e}")
@@ -90,7 +92,13 @@ def generate_flashcards(session_id: str, language: str = "english"):
     full_context = "\n\n".join(docs[:40]) 
 
     # 3. Generate with AI
-    lang_instruction = f"Output language: {language}. Remember: technical terms in English, explanations in {language}."
+    script_note = ""
+    if language.lower() == "hindi":
+        script_note = "STRICT: Use Devanagari script (हिन्दी) for explanations."
+    elif language.lower() == "telugu":
+        script_note = "STRICT: Use Telugu script (తెలుగు) ONLY. DO NOT USE ENGLISH ALPHABETS FOR TELUGU SENTENCES."
+        
+    lang_instruction = f"Output language: {language}. {script_note} Remember: technical terms in English, explanations in native {language} script."
     prompt = f"Extract topics and generate revision flashcards from this text:\n\n{full_context}\n\n{lang_instruction}"
     
     messages = [
@@ -108,8 +116,8 @@ def generate_flashcards(session_id: str, language: str = "english"):
         
         # Cache for future use
         os.makedirs(os.path.dirname(flashcard_cache_path), exist_ok=True)
-        with open(flashcard_cache_path, "w") as f:
-            json.dump(data, f)
+        with open(flashcard_cache_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
             
         return data.get("flashcards", [])
     except Exception as e:

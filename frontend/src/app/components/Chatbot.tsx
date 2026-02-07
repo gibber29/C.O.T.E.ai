@@ -137,12 +137,15 @@ export const Chatbot: React.FC<ChatbotProps> = ({ sessionId }) => {
 
     return (
         <>
-            <button
-                onClick={() => setIsOpen(true)}
-                className={`fixed bottom-6 right-6 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-all z-50 ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}
-            >
-                <MessageCircle size={28} />
-            </button>
+            <div className={`fixed bottom-8 right-8 z-50 flex items-center justify-center transition-all duration-500 ${isOpen ? 'scale-0 opacity-0' : 'scale-100 opacity-100'}`}>
+                <div className="absolute w-20 h-20 bg-primary/10 rounded-full animate-pulse" />
+                <button
+                    onClick={() => setIsOpen(true)}
+                    className="w-16 h-16 bg-white/10 backdrop-blur-xl border border-white/20 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 hover:bg-white/20 transition-all relative z-10 group"
+                >
+                    <MessageCircle size={32} className="group-hover:rotate-12 transition-transform" />
+                </button>
+            </div>
 
             <div
                 className={`fixed bottom-6 right-6 w-[400px] h-[600px] bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-all duration-300 z-50 origin-bottom-right ${isOpen ? 'scale-100 opacity-100' : 'scale-50 opacity-0 pointer-events-none'}`}

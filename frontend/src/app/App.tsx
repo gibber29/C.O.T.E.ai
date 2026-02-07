@@ -9,6 +9,8 @@ import { AssessmentPathView } from './components/AssessmentPathView';
 import { LoginView } from './components/LoginView';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from 'next-themes';
+import { TeacherReviewModal } from './components/TeacherReviewModal';
+import { JoinClassModal } from './components/JoinClassModal';
 
 import { useEffect } from 'react';
 
@@ -39,6 +41,8 @@ export default function App() {
     const [activeTab, setActiveTab] = useState('dashboard');
     const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
     const [userRole, setUserRole] = useState<'teacher' | 'student' | null>(null);
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+    const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
     const [topics, setTopics] = useState<Record<string, Topic>>(() => {
         const saved = localStorage.getItem('cote_topics');
         if (!saved) return {};
@@ -146,9 +150,16 @@ export default function App() {
     const selectedTopic = selectedTopicId ? topics[selectedTopicId] : null;
     if (selectedTopic) {
         navbarTitle = selectedTopic.title;
+    } else if (activeTab === 'materials') {
+        navbarTitle = 'Classrooms';
     } else if (activeTab !== 'dashboard') {
         navbarTitle = activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
     }
+
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab);
+        setSelectedTopicId(null); // Clear selected topic to ensure we exit classroom view
+    };
 
     return (
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -157,19 +168,26 @@ export default function App() {
                     isOpen={isSidebarOpen}
                     setIsOpen={setIsSidebarOpen}
                     activeTab={activeTab}
-                    setActiveTab={setActiveTab}
+                    setActiveTab={handleTabChange}
                     userRole={userRole}
                     onLogout={() => {
                         setUserRole(null);
                         setSelectedTopicId(null);
                         setActiveTab('dashboard');
                     }}
+                    onOpenReviewModal={() => setIsReviewModalOpen(true)}
                 />
 
-                <div className={`flex-1 h-screen flex flex-col transition-all duration-300 ${isSidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
+                <div className={`flex-1 flex flex-col min-w-0 h-screen transition-all duration-300 ${isSidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
                     <Navbar
                         onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
                         title={navbarTitle}
+                        userRole={userRole}
+                        onJoinClassClick={() => setIsJoinModalOpen(true)}
+                        onClassroomsClick={() => {
+                            setActiveTab('materials');
+                            setSelectedTopicId(null);
+                        }}
                     />
 
                     <main className={`flex-1 overflow-y-auto ${selectedTopic ? 'h-full overflow-hidden flex flex-col' : ''}`}>
@@ -196,6 +214,9 @@ export default function App() {
                                 onJoinClass={handleJoinClassroom}
                                 onUploadComplete={handleUploadComplete}
                                 onNavigateToCreateClass={() => setActiveTab('progress')}
+                                onOpenReviewModal={() => setIsReviewModalOpen(true)}
+                                isClassroomsView={activeTab === 'materials'}
+                                onJoinClassClick={() => setIsJoinModalOpen(true)}
                             />
                         )}
                     </main>
@@ -203,6 +224,20 @@ export default function App() {
 
                 <Chatbot sessionId={selectedTopicId} />
                 <Toaster position="top-right" />
+                {userRole === 'teacher' && (
+                    <TeacherReviewModal
+                        isOpen={isReviewModalOpen}
+                        onClose={() => setIsReviewModalOpen(false)}
+                        topics={Object.values(topics)}
+                    />
+                )}
+                {userRole === 'student' && (
+                    <JoinClassModal
+                        isOpen={isJoinModalOpen}
+                        onClose={() => setIsJoinModalOpen(false)}
+                        onJoin={handleJoinClassroom}
+                    />
+                )}
             </div>
         </ThemeProvider>
     );

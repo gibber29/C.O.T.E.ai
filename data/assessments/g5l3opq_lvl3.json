@@ -1,0 +1,62 @@
+{
+    "level": 3,
+    "timer_seconds": 600,
+    "questions": [
+        {
+            "id": 1,
+            "question": "The Transformer architecture replaces recurrent layers with attention mechanisms to improve parallelization. However, for extremely long sequences, self-attention can still be computationally expensive. Propose a method to modify the Transformer architecture to efficiently handle sequences exceeding 10,000 tokens while maintaining its ability to model long-range dependencies. Justify your design choices with reference to the concepts discussed in the paper and potential trade-offs.",
+            "type": "short_answer",
+            "explanation": "The answer should address the computational complexity of self-attention with long sequences and propose a modification to the Transformer architecture. Possible solutions include sparse attention, block-wise attention, or hierarchical attention. The justification should explain how the proposed method reduces computational cost while preserving the ability to model long-range dependencies. Trade-offs such as reduced model capacity or increased latency should be considered.",
+            "hints": [
+                "Think about how to reduce the number of attention calculations.",
+                "Consider methods that approximate the full attention matrix.",
+                "Remember the trade-off between computational cost and model accuracy."
+            ]
+        },
+        {
+            "id": 2,
+            "question": "The paper mentions that the Transformer generalizes well to English constituency parsing. However, the results are not state-of-the-art compared to Recurrent Neural Network Grammars (RNNG). Critique the Transformer's application to constituency parsing, focusing on potential limitations in capturing hierarchical structure compared to RNNG. Propose an alternative attention mechanism or architectural modification that could improve the Transformer's performance on this task.",
+            "type": "short_answer",
+            "explanation": "The answer should identify limitations of the Transformer in capturing hierarchical structure, such as its flat attention mechanism. The critique should compare the Transformer's approach to the recursive nature of RNNG. The proposed alternative should address these limitations, such as incorporating tree-structured attention or using a hierarchical Transformer architecture. The answer should justify why the proposed modification would improve performance on constituency parsing.",
+            "hints": [
+                "Think about how RNNGs explicitly represent hierarchical structure.",
+                "Consider how the Transformer's attention mechanism could be adapted to reflect tree structures.",
+                "Remember the importance of capturing syntactic relationships in parsing."
+            ]
+        },
+        {
+            "id": 3,
+            "question": "The authors used sinusoidal positional encodings and found nearly identical results to learned positional embeddings. However, they hypothesized that sinusoidal encodings would allow the model to extrapolate to sequence lengths longer than those encountered during training. Design an experiment to rigorously test this hypothesis. Describe the experimental setup, including the training data, evaluation data, and metrics used. What potential challenges might you encounter, and how would you address them?",
+            "type": "short_answer",
+            "explanation": "The answer should describe an experiment that trains Transformers with both sinusoidal and learned positional encodings on sequences of a certain length and then evaluates their performance on longer sequences. The experimental setup should include details about the training data, evaluation data, and metrics (e.g., BLEU score or perplexity). Potential challenges include overfitting to the training data and the difficulty of generating realistic long sequences. The answer should propose solutions to these challenges, such as using regularization techniques or data augmentation.",
+            "hints": [
+                "Think about how to create a dataset with varying sequence lengths.",
+                "Consider how to measure the model's ability to generalize to longer sequences.",
+                "Remember the potential for overfitting when extrapolating to unseen data."
+            ]
+        },
+        {
+            "id": 4,
+            "question": "The paper's success relies on multi-head attention. Imagine a scenario where computational resources are severely limited, making it impossible to use multiple attention heads. Propose an alternative attention mechanism that can approximate the benefits of multi-head attention with significantly reduced computational cost. Explain the mechanism, its advantages, and its potential drawbacks compared to standard multi-head attention.",
+            "type": "short_answer",
+            "explanation": "The answer should propose an alternative attention mechanism that reduces computational cost while approximating the benefits of multi-head attention. Possible solutions include using a single, larger attention head with a bottleneck layer, or using a dynamic routing mechanism to select a subset of features for attention. The explanation should describe how the proposed mechanism reduces computational cost and why it can approximate the benefits of multi-head attention. Potential drawbacks include reduced model capacity or increased training complexity.",
+            "hints": [
+                "Think about how to reduce the dimensionality of the attention mechanism.",
+                "Consider methods that share parameters across different attention heads.",
+                "Remember the importance of capturing diverse relationships in the input data."
+            ]
+        },
+        {
+            "id": 5,
+            "question": "The Transformer architecture is primarily evaluated on machine translation and constituency parsing in this paper. However, recent advancements in areas like image generation and reinforcement learning have shown the potential of attention mechanisms. Propose a novel application of the Transformer architecture (or a modified version) to a problem outside of NLP, such as image generation or reinforcement learning. Justify your choice by explaining how the Transformer's strengths (e.g., parallelization, long-range dependency modeling) would be beneficial for the chosen problem. Also, discuss any necessary modifications to the architecture to adapt it to the new domain.",
+            "type": "short_answer",
+            "explanation": "The answer should propose a novel application of the Transformer architecture to a problem outside of NLP. The justification should explain how the Transformer's strengths (e.g., parallelization, long-range dependency modeling) would be beneficial for the chosen problem. Necessary modifications to the architecture should be discussed, such as adapting the input and output representations, or incorporating domain-specific knowledge. For example, applying Transformers to image generation might involve representing images as sequences of patches and using attention to model relationships between different regions of the image. Applying Transformers to reinforcement learning might involve using attention to model the relationships between different states or actions.",
+            "hints": [
+                "Think about problems where long-range dependencies are important.",
+                "Consider how to represent the input and output data as sequences.",
+                "Remember the need to adapt the architecture to the specific characteristics of the new domain."
+            ]
+        }
+    ],
+    "chapter_name": "attention is all you need.pdf"
+}

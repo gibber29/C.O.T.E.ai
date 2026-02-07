@@ -4,7 +4,6 @@ import {
     Library,
     ClipboardList,
     TrendingUp,
-    Settings,
     LogOut,
     ChevronLeft,
     ChevronRight,
@@ -18,6 +17,7 @@ interface SidebarProps {
     setActiveTab: (tab: string) => void;
     userRole: 'teacher' | 'student';
     onLogout: () => void;
+    onOpenReviewModal?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -26,16 +26,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
     activeTab,
     setActiveTab,
     userRole,
-    onLogout
+    onLogout,
+    onOpenReviewModal
 }) => {
+    const isTeacher = userRole === 'teacher';
+
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { id: 'materials', label: 'Materials', icon: Library },
+        { id: 'materials', label: 'Classrooms', icon: Library },
         { id: 'assessments', label: 'Assessments', icon: ClipboardList },
         { id: 'progress', label: 'Student Progress', icon: TrendingUp },
     ];
-
-    const isTeacher = userRole === 'teacher';
 
     return (
         <aside
@@ -69,11 +70,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {isTeacher && (
                     <div className="pt-4 mt-4 border-t border-border">
                         <button
-                            onClick={() => (window as any).openReviewModal?.()}
+                            onClick={onOpenReviewModal}
                             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-primary hover:bg-primary/10 transition-all group"
                         >
                             <div className="bg-primary/10 p-1.5 rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                                <Zap size={18} />
+                                <Zap size={18} className="text-primary group-hover:text-primary-foreground" />
                             </div>
                             {isOpen && <span className="font-bold">Send Review to AI</span>}
                         </button>

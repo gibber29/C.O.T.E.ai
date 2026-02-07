@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Clock, CheckCircle, AlertCircle, ArrowRight, Eye } from 'lucide-react';
+import { X, Clock, CheckCircle, AlertCircle, ArrowRight, Eye, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -17,6 +17,7 @@ interface Question {
     options?: string[]; // MCQs
     correct_answer?: string; // MCQs
     type?: 'mcq' | 'short_answer';
+    hints?: string[];
 }
 
 interface Result {
@@ -44,9 +45,14 @@ export const AssessmentModal: React.FC<AssessmentModalProps> = ({
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
     const [wrongQuestions, setWrongQuestions] = useState<any[]>([]);
 
+    // Hint State
+    const [userXP, setUserXP] = useState(0);
+    const [unlockedHints, setUnlockedHints] = useState<number>(0); // 0, 1, 2, 3
+
     useEffect(() => {
         if (isOpen && level && sessionId) {
             loadAssessment();
+            loadXP();
         } else {
             // Reset state on close
             setQuestions([]);
@@ -55,8 +61,14 @@ export const AssessmentModal: React.FC<AssessmentModalProps> = ({
             setResult(null);
             setIsReviewMode(false);
             setTimer(600);
+            setUnlockedHints(0);
         }
     }, [isOpen, level, sessionId]);
+
+    // Reset hints on question change
+    useEffect(() => {
+        setUnlockedHints(0);
+    }, [currentIndex]);
 
     // Timer Logic
     useEffect(() => {
@@ -75,6 +87,54 @@ export const AssessmentModal: React.FC<AssessmentModalProps> = ({
 
         return () => clearInterval(interval);
     }, [isOpen, result, loading]);
+
+    const loadXP = async () => {
+        try {
+            const res = await fetch(`http://localhost:8000/api/progress/${sessionId}`);
+            const data = await res.json();
+            setUserXP(data.xp || 0);
+        } catch (e) {
+            console.error("Failed to load XP");
+        }
+    };
+
+    const handleUnlockHint = async () => {
+        const currentQ = questions[currentIndex];
+        if (!currentQ.hints || unlockedHints >= currentQ.hints.length) return;
+
+        let cost = 0;
+        if (unlockedHints === 0) cost = 0;       // 1st Hint Free
+        else if (unlockedHints === 1) cost = 5;  // 2nd Hint 5 XP
+        else if (unlockedHints === 2) cost = 10; // 3rd Hint 10 XP
+
+        if (cost > 0) {
+            if (userXP < cost) {
+                toast.error(`Not enough XP! You need ${cost} XP.`);
+                return;
+            }
+
+            // Deduct XP
+            try {
+                const res = await fetch('http://localhost:8000/api/spend_xp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId, amount: cost })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    toast.error(data.message || "Failed to spend XP");
+                    return;
+                }
+                setUserXP(prev => prev - cost);
+                toast.success(`Spent ${cost} XP for a hint!`);
+            } catch (e) {
+                toast.error("Network error spending XP");
+                return;
+            }
+        }
+
+        setUnlockedHints(prev => prev + 1);
+    };
 
     const loadAssessment = async () => {
         setLoading(true);
@@ -349,6 +409,44 @@ export const AssessmentModal: React.FC<AssessmentModalProps> = ({
                                                     value={userAnswers[questions[currentIndex].id] || ''}
                                                     onChange={(e) => handleAnswerInitial(e.target.value)}
                                                 />
+                                            )}
+                                        </div>
+
+                                        {/* HINT SECTION */}
+                                        <div className="pt-4 border-t border-border mt-8">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground">
+                                                    <Lightbulb size={16} className={unlockedHints > 0 ? "text-yellow-500 fill-yellow-500" : ""} />
+                                                    <span>Hints ({unlockedHints}/{questions[currentIndex].hints?.length || 0})</span>
+                                                </div>
+                                                <div className="text-xs font-mono text-muted-foreground">
+                                                    XP Balance: {userXP}
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-3">
+                                                {questions[currentIndex].hints?.slice(0, unlockedHints).map((hint, i) => (
+                                                    <motion.div
+                                                        key={i}
+                                                        initial={{ opacity: 0, height: 0 }}
+                                                        animate={{ opacity: 1, height: 'auto' }}
+                                                        className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-sm italic text-muted-foreground"
+                                                    >
+                                                        💡 {hint}
+                                                    </motion.div>
+                                                ))}
+                                            </div>
+
+                                            {unlockedHints < (questions[currentIndex].hints?.length || 0) && (
+                                                <button
+                                                    onClick={handleUnlockHint}
+                                                    className="mt-4 text-xs font-bold px-4 py-2 rounded-full bg-secondary hover:bg-secondary/80 transition-colors flex items-center gap-2"
+                                                >
+                                                    Unlock Next Hint
+                                                    <span className="bg-background px-2 py-0.5 rounded text-[10px] border">
+                                                        {unlockedHints === 0 ? "FREE" : unlockedHints === 1 ? "5 XP" : "10 XP"}
+                                                    </span>
+                                                </button>
                                             )}
                                         </div>
                                     </motion.div>

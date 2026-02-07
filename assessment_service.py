@@ -1,6 +1,8 @@
 import os
 import json
 import random
+import time
+from typing import List, Dict, Optional
 from typing import List, Dict, Optional
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -14,6 +16,7 @@ UPLOAD_ROOT = "uploads"
 DATA_ROOT = "data"
 ASSESSMENT_DIR = os.path.join(DATA_ROOT, "assessments")
 PROGRESS_FILE = os.path.join(DATA_ROOT, "user_progress.json")
+COOLDOWN_SECONDS = 600 # 10 Minutes
 
 os.makedirs(ASSESSMENT_DIR, exist_ok=True)
 
@@ -41,6 +44,35 @@ def get_session_text(session_id: str) -> str:
     
     return full_text[:50000] # Limit context window for safety
 
+def get_sorted_files(session_id: str):
+    """Returns a list of PDF dictionaries sorted by creation time (Oldest First)."""
+    session_dir = os.path.join(UPLOAD_ROOT, session_id)
+    if not os.path.exists(session_dir):
+        return []
+    
+    files = []
+    for filename in os.listdir(session_dir):
+        if filename.lower().endswith(".pdf"):
+            path = os.path.join(session_dir, filename)
+            files.append({
+                "filename": filename,
+                "path": path,
+                "timestamp": os.path.getctime(path)
+            })
+    
+    # Sort: Oldest -> Newest
+    return sorted(files, key=lambda x: x["timestamp"])
+
+def get_current_chapter_context(session_id: str, chapter_file: dict) -> str:
+    """Extracts text ONLY from the specific chapter file."""
+    try:
+        from unstructured.partition.pdf import partition_pdf
+        elements = partition_pdf(filename=chapter_file["path"], strategy="fast")
+        return "\n".join([str(e) for e in elements])[:40000]
+    except Exception as e:
+        print(f"Error reading chapter {chapter_file['filename']}: {e}")
+        return ""
+
 def get_assessment_prompt(level: int, context: str) -> str:
     if level == 1:
         return f"""
@@ -63,7 +95,8 @@ def get_assessment_prompt(level: int, context: str) -> str:
                 "question": "What is...",
                 "options": ["A", "B", "C", "D"],
                 "correct_answer": "A",
-                "explanation": "Brief explanation of why A is correct."
+                "explanation": "Brief explanation of why A is correct.",
+                "hints": ["Hint 1 (Vague)", "Hint 2 (Helpful)", "Hint 3 (Giveaway)"]
             }},
             ...
         ]
@@ -89,7 +122,8 @@ def get_assessment_prompt(level: int, context: str) -> str:
                 "question": "Scenario...",
                 "options": ["A", "B", "C", "D"],
                 "correct_answer": "B",
-                "explanation": "Brief explanation of why B is correct in this scenario."
+                "explanation": "Brief explanation of why B is correct in this scenario.",
+                "hints": ["Hint 1", "Hint 2", "Hint 3"]
             }},
             ...
         ]
@@ -113,7 +147,8 @@ def get_assessment_prompt(level: int, context: str) -> str:
                 "id": 1,
                 "question": "Propose a method to...",
                 "type": "short_answer",
-                "explanation": "Key elements that should be in the student's answer."
+                "explanation": "Key elements that should be in the student's answer.",
+                "hints": ["Think about...", "Consider...", "Remember the concept of..."]
             }},
             ...
         ]
@@ -127,10 +162,23 @@ def generate_assessment(session_id: str, level: int):
         with open(cache_file, "r") as f:
             return json.load(f)
 
-    # 2. Get Text
-    context = get_session_text(session_id)
-    if not context:
+    # 2. Determine Current Chapter
+    progress = load_user_progress().get(session_id, {})
+    chapter_index = progress.get("current_chapter_index", 0)
+    
+    files = get_sorted_files(session_id)
+    if not files:
         return {"error": "No documents found for this session."}
+        
+    if chapter_index >= len(files):
+         return {"error": "All chapters completed! You are a master."}
+         
+    current_file = files[chapter_index]
+    
+    # 3. Get Context for THIS Chapter ONLY
+    context = get_current_chapter_context(session_id, current_file)
+    if not context:
+        return {"error": f"Failed to load content for {current_file['filename']}"}
 
     # 3. Generate
     prompt = get_assessment_prompt(level, context)
@@ -151,8 +199,9 @@ def generate_assessment(session_id: str, level: int):
         # Add metadata like timer
         result = {
             "level": level,
-            "timer_seconds": 600, # 10 minutes for all levels
-            "questions": assessment_data
+            "timer_seconds": 600,
+            "questions": assessment_data,
+            "chapter_name": current_file['filename']
         }
         
         # Save to Cache
@@ -164,6 +213,68 @@ def generate_assessment(session_id: str, level: int):
     except Exception as e:
         print(f"Assessment Generation Failed: {e}")
         return {"error": "Failed to generate assessment."}
+
+def generate_remedial_plan(mistakes: List[Dict]) -> Dict:
+    """
+    Analyzes mistakes and generates a diagnostic remedial plan.
+    """
+    if not mistakes:
+        return {}
+
+    mistakes_text = json.dumps([{
+        "question": m["question"], 
+        "user_answer": m.get("user_answer"), 
+        "correct_answer": m.get("correct_answer")
+    } for m in mistakes], indent=2)
+
+    prompt = f"""
+    You are an expert tutor. A student failed an assessment. Analyze their mistakes and provide a remedial plan.
+    
+    Mistakes:
+    {mistakes_text}
+
+    Task:
+    1. **Diagnosis**: Classify the primary gap (Concept Gap, Application Gap, or Overgeneralization).
+    2. **Explanation**: Provide a clear, guided explanation to correct the misunderstanding (keep it under 100 words).
+    3. **Practice Question**: Create 1 single-choice practice question to verify understanding.
+
+    Output JSON ONLY:
+    {{
+        "diagnosis": "Concept Gap: Misunderstood the definition of X",
+        "explanation": "Here is why...",
+        "practice_question": {{
+            "question": "...",
+            "options": ["A", "B", "C", "D"],
+            "correct_answer": "A",
+            "explanation": "..."
+        }}
+    }}
+    """
+    try:
+        response = llm.invoke([HumanMessage(content=prompt)])
+        content = response.content.strip()
+        if content.startswith("```json"): content = content[7:-3]
+        elif content.startswith("```"): content = content[3:-3]
+        return json.loads(content)
+    except Exception as e:
+        print(f"Remedial Plan Generation Failed: {e}")
+        return {
+            "diagnosis": "General Review Needed",
+            "explanation": "Please review the material again.",
+            "practice_question": None
+        }
+
+def spend_xp(session_id: str, amount: int) -> bool:
+    """Deducts XP if sufficient balance exists. Returns True if successful."""
+    progress = load_user_progress()
+    if session_id not in progress:
+        return False
+    
+    if progress[session_id].get("xp", 0) >= amount:
+        progress[session_id]["xp"] -= amount
+        save_user_progress(progress)
+        return True
+    return False
 
 def load_user_progress():
     if os.path.exists(PROGRESS_FILE):
@@ -179,7 +290,18 @@ def submit_assessment_result(session_id: str, level: int, score: int, max_score:
     progress = load_user_progress()
     
     if session_id not in progress:
-        progress[session_id] = {"xp": 0, "unlocked_level": 1, "history": [], "mistakes": []}
+        progress[session_id] = {
+            "xp": 0, 
+            "unlocked_level": 1, 
+            "current_chapter_index": 0,
+            "history": [], 
+            "mistakes": []
+        }
+    
+    user_data = progress[session_id]
+    
+    # Validation: Ensure they are submitting for the CORRECT chapter level
+    # (Simplified: Frontend handles most checks, backend updates pointers)
     
     if "mistakes" not in progress[session_id]:
         progress[session_id]["mistakes"] = []
@@ -198,20 +320,36 @@ def submit_assessment_result(session_id: str, level: int, score: int, max_score:
             if user_data["unlocked_level"] < 2:
                 user_data["unlocked_level"] = 2
                 
+                
     elif level == 2:
         if score >= 7:
             xp_gained = random.randint(100, 150)
             passed = True
             if user_data["unlocked_level"] < 3:
                 user_data["unlocked_level"] = 3
-                
+
     elif level == 3:
-        if score > 0: 
-            xp_gained = random.randint(150, 200)
+        if score > 0: # Strict passing for L3
+            xp_gained = random.randint(150, 200) + 500 # Bonus for Chapter Clear
             passed = True
+            
+            # --- CHAPTER MASTERED ---
+            # Move to next chapter, Reset level to 1
+            user_data["current_chapter_index"] = user_data.get("current_chapter_index", 0) + 1
+            user_data["unlocked_level"] = 1 
 
     if passed:
         user_data["xp"] += xp_gained
+        # clear remedial plan if passed
+        if "remedial_plan" in user_data:
+            del user_data["remedial_plan"]
+        if "retry_available_at" in user_data:
+            del user_data["retry_available_at"]
+    else:
+        # FAILED - Trigger Cooldown & Remedial Plan
+        user_data["retry_available_at"] = time.time() + COOLDOWN_SECONDS
+        if mistakes:
+            user_data["remedial_plan"] = generate_remedial_plan(mistakes)
     
     # Update History
     user_data["history"].append({
@@ -277,4 +415,156 @@ def update_mistake_comment(session_id: str, question_text: str, comment: str):
 
 def get_progress(session_id: str):
     progress = load_user_progress()
-    return progress.get(session_id, {"xp": 0, "unlocked_level": 1, "history": []})
+    user_data = progress.get(session_id, {
+        "xp": 0, 
+        "unlocked_level": 1, 
+        "current_chapter_index": 0,
+        "history": []
+    })
+    
+    # Calculate Lagging Status
+    files = get_sorted_files(session_id)
+    current_idx = user_data.get("current_chapter_index", 0)
+    
+    status = "on_track"
+    deadline_msg = ""
+    
+    if current_idx < len(files):
+        current_file = files[current_idx]
+        user_data["current_chapter_title"] = current_file['filename'] # Added for Frontend
+        upload_time = current_file["timestamp"]
+        deadline = upload_time + (5 * 24 * 3600) # 5 Days in seconds
+        
+        if current_idx + 1 < len(files):
+             user_data["next_chapter_title"] = files[current_idx + 1]['filename']
+
+        if time.time() > deadline:
+            status = "lagging"
+            days_late = int((time.time() - deadline) / (24 * 3600))
+            deadline_date = time.strftime('%Y-%m-%d', time.localtime(deadline))
+            deadline_msg = f"⚠️ You are {days_late} days late! Deadline for '{current_file['filename']}' was {deadline_date}."
+    else:
+        user_data["current_chapter_title"] = "All Chapters Mastered!"
+    
+    user_data["status"] = status
+    user_data["deadline_message"] = deadline_msg
+    user_data["total_chapters"] = len(files)
+
+    # Check Cooldown
+    if "retry_available_at" in user_data:
+        remaining = user_data["retry_available_at"] - time.time()
+        if remaining > 0:
+            user_data["cooldown_remaining"] = int(remaining)
+        else:
+            # Cleanup expired cooldown
+            del user_data["retry_available_at"]
+            if "remedial_plan" in user_data:
+                del user_data["remedial_plan"]
+    
+    return user_data
+
+def get_teacher_analytics(session_id: str):
+    """
+    Generates class-wide analytics.
+    For demo purposes, generates synthetic data for 'other students' 
+    and blends with the real user's progress.
+    """
+    progress = load_user_progress().get(session_id, {})
+    
+    # Real User Data
+    user_level = progress.get("unlocked_level", 1)
+    user_xp = progress.get("xp", 0)
+    user_mistakes = progress.get("mistakes", [])
+    
+    # Synthetic Class Data (Mocking 20 students)
+    total_students = 20
+    
+    # Distribution of levels (Mock)
+    level_dist = {1: 0, 2: 0, 3: 0, "completed": 0}
+    
+    # Randomly assign 19 other students
+    import random
+    for _ in range(19):
+        lvl = random.choice([1, 1, 1, 2, 2, 3, "completed"]) # weighted towards 1 & 2
+        level_dist[lvl] += 1
+    
+    # Add real user
+    if progress.get("current_chapter_index", 0) > 0: # simplifiction
+        level_dist["completed"] += 1
+    else:
+        level_dist[user_level] += 1
+
+    # Calculate Stuck % (Students at L1/L2 for > 3 days - mock)
+    stuck_percent = random.randint(15, 30)
+
+    # Common Mistakes (Clustered from real mistakes + mock)
+    common_mistakes = []
+    if user_mistakes:
+        for m in user_mistakes[:3]:
+            common_mistakes.append({
+                "concept": m.get("question", "Unknown Concept")[:50] + "...",
+                "frequency": random.randint(3, 12)
+            })
+    else:
+        common_mistakes = [
+            {"concept": "Difference between Supervised and Unsupervised Learning", "frequency": 8},
+            {"concept": "Overfitting vs Underfitting definitions", "frequency": 6},
+            {"concept": "Calculus chain rule application", "frequency": 5}
+        ]
+
+    return {
+        "total_students": total_students,
+        "level_distribution": level_dist,
+        "stuck_percent": stuck_percent,
+        "average_attempts": {
+            "level_1": 1.2,
+            "level_2": 2.5,
+            "level_3": 3.1
+        },
+        "common_mistakes": common_mistakes
+    }
+
+def get_all_assessments_for_teacher(session_id: str):
+    """
+    Returns all assessments organized by chapter and quest level for teacher preview.
+    Structure:
+    {
+        "chapters": [
+            {
+                "chapter_name": "filename.pdf",
+                "chapter_index": 0,
+                "quests": [
+                    {"level": 1, "questions": [...], "timer_seconds": 600},
+                    {"level": 2, "questions": [...], "timer_seconds": 600},
+                    {"level": 3, "questions": [...], "timer_seconds": 600}
+                ]
+            }
+        ]
+    }
+    """
+    files = get_sorted_files(session_id)
+    if not files:
+        return {"chapters": []}
+    
+    chapters = []
+    
+    for idx, file_info in enumerate(files):
+        chapter_data = {
+            "chapter_name": file_info['filename'],
+            "chapter_index": idx,
+            "quests": []
+        }
+        
+        # Generate assessments for all 3 levels
+        for level in [1, 2, 3]:
+            assessment = generate_assessment(session_id, level)
+            if "error" not in assessment:
+                chapter_data["quests"].append({
+                    "level": level,
+                    "questions": assessment.get("questions", []),
+                    "timer_seconds": assessment.get("timer_seconds", 600)
+                })
+        
+        chapters.append(chapter_data)
+    
+    return {"chapters": chapters}

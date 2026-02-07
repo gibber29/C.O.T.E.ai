@@ -3,7 +3,6 @@ import {
     ArrowLeft,
     FileText,
     BrainCircuit,
-    PenTool,
     ChevronRight,
     CheckCircle2,
     Users,
@@ -11,9 +10,10 @@ import {
     MoreVertical,
     Share2,
     Book,
-    ClipboardList,
-    Clock,
-    Upload
+    Upload,
+    UserPlus,
+    X,
+    Send
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -51,6 +51,8 @@ export const MaterialView: React.FC<MaterialViewProps> = ({ topic, onBack, userR
     const [isFlipped, setIsFlipped] = useState(false);
     const [assessmentStep, setAssessmentStep] = useState(0);
     const [assessmentScore, setAssessmentScore] = useState<number | null>(null);
+    const [selectedStudentForComment, setSelectedStudentForComment] = useState<any | null>(null);
+    const [commentText, setCommentText] = useState('');
 
     const isTeacher = userRole === 'teacher';
 
@@ -331,7 +333,136 @@ export const MaterialView: React.FC<MaterialViewProps> = ({ topic, onBack, userR
                     </div>
                 )}
 
-                {/* People view ... */}
+                {view === 'people' && (
+                    <div className="max-w-4xl mx-auto p-8 space-y-8 animate-in fade-in duration-500">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-3xl font-black">People</h3>
+                                <p className="text-muted-foreground font-medium">Manage students and view their learning progress.</p>
+                            </div>
+                            {isTeacher && (
+                                <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+                                    <UserPlus size={18} /> Invite Student
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Teachers List */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between border-b border-primary py-4">
+                                <h4 className="text-2xl font-black text-primary">Teachers</h4>
+                                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">1 Teacher</span>
+                            </div>
+                            <div className="flex items-center gap-4 p-2">
+                                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-black">T</div>
+                                <span className="font-bold text-lg">Professor C.O.T.E</span>
+                            </div>
+                        </div>
+
+                        {/* Students List */}
+                        <div className="space-y-6 pt-8">
+                            <div className="flex items-center justify-between border-b border-primary py-4">
+                                <h4 className="text-2xl font-black text-primary">Students</h4>
+                                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                                    {isTeacher ? 'Sorted by XP (Highest to Lowest)' : 'Classmates'}
+                                </span>
+                            </div>
+
+                            <div className="space-y-2">
+                                {[
+                                    { name: 'Sarah Wilson', xp: 2450, lastActive: '2 mins ago', color: 'bg-green-500' },
+                                    { name: 'James Miller', xp: 2100, lastActive: '15 mins ago', color: 'bg-blue-500' },
+                                    { name: 'Elena Rodriguez', xp: 1850, lastActive: '1 hour ago', color: 'bg-purple-500' },
+                                    { name: 'David Chen', xp: 1200, lastActive: 'Yesterday', color: 'bg-orange-500' },
+                                    { name: 'Aisha Gupta', xp: 950, lastActive: '2 days ago', color: 'bg-red-500' },
+                                ].sort((a, b) => b.xp - a.xp).map((student, idx) => (
+                                    <div key={idx} className="flex items-center justify-between p-4 bg-card border border-border rounded-2xl hover:border-primary/50 transition-all group">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-10 h-10 ${student.color} rounded-full flex items-center justify-center text-white font-black uppercase`}>
+                                                {student.name.split(' ').map(n => n[0]).join('')}
+                                            </div>
+                                            <div className="text-left">
+                                                <p className="font-bold group-hover:text-primary transition-colors">{student.name}</p>
+                                                <p className="text-xs text-muted-foreground font-medium">Last active: {student.lastActive}</p>
+                                            </div>
+                                        </div>
+                                        {isTeacher && (
+                                            <div className="flex items-center gap-6">
+                                                <div className="text-right">
+                                                    <p className="text-sm font-black text-primary">{student.xp} XP</p>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Rank #{idx + 1}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => setSelectedStudentForComment(student)}
+                                                    className="p-2 hover:bg-secondary rounded-full transition-colors"
+                                                >
+                                                    <MessageSquare size={18} className="text-muted-foreground" />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Comment Modal */}
+                        {selectedStudentForComment && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                                <div className="bg-card border-2 border-border w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                                    <div className="p-8 space-y-6">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-12 h-12 ${selectedStudentForComment.color} rounded-2xl flex items-center justify-center text-white font-black`}>
+                                                    {selectedStudentForComment.name.split(' ').map((n: string) => n[0]).join('')}
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-xl font-black">Message {selectedStudentForComment.name.split(' ')[0]}</h3>
+                                                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest">Teacher Comment</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => { setSelectedStudentForComment(null); setCommentText(''); }}
+                                                className="p-2 hover:bg-secondary rounded-full"
+                                            >
+                                                <X size={20} />
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <textarea
+                                                autoFocus
+                                                value={commentText}
+                                                onChange={(e) => setCommentText(e.target.value)}
+                                                placeholder={`Write a word of encouragement or feedback for ${selectedStudentForComment.name}...`}
+                                                className="w-full bg-secondary/30 border-2 border-transparent focus:border-primary/20 focus:ring-0 text-15 font-medium resize-none min-h-[150px] p-6 rounded-3xl placeholder:text-muted-foreground transition-all"
+                                            />
+
+                                            <div className="flex items-center justify-between gap-4">
+                                                <button
+                                                    onClick={() => { setSelectedStudentForComment(null); setCommentText(''); }}
+                                                    className="px-6 py-3 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    disabled={!commentText.trim()}
+                                                    onClick={() => {
+                                                        toast.success(`Comment sent to ${selectedStudentForComment.name}!`);
+                                                        setSelectedStudentForComment(null);
+                                                        setCommentText('');
+                                                    }}
+                                                    className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:grayscale"
+                                                >
+                                                    Send Comment <Send size={18} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {view === 'reading' && activeMaterial && (
                     <div className="h-full flex flex-col p-2 animate-in fade-in duration-500">

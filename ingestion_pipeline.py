@@ -41,6 +41,13 @@ llm = ChatGoogleGenerativeAI(model=GEMINI_MODEL, temperature=0)
 
 # --- CORE FUNCTIONS (Replicated from your notebook) ---
 
+def get_file_timestamp(file_path: str) -> float:
+    """Returns the creation time of the file."""
+    try:
+        return os.path.getctime(file_path)
+    except Exception:
+        return 0.0
+
 def is_valid_pdf(file_path: str) -> bool:
     try:
         with open(file_path, "rb") as f:
@@ -264,6 +271,7 @@ def process_files_to_docs(directory_path: str) -> List[Document]:
                         "session_id": session_id,
                         "source": filename,
                         "parent_topic": topic_title,
+                        "timestamp": get_file_timestamp(file_path),
                         "original_content": json.dumps({
                             "raw_text": raw_text,
                             "tables_html": content['tables'],

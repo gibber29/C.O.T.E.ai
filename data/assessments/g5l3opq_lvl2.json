@@ -1,0 +1,177 @@
+{
+    "level": 2,
+    "timer_seconds": 600,
+    "questions": [
+        {
+            "id": 1,
+            "question": "A student observes that training a Transformer model on a very long sequence is computationally expensive. Based on the text, which of the following strategies would be MOST effective in reducing the computational cost while still leveraging attention mechanisms?",
+            "options": [
+                "A) Increasing the number of layers in the encoder and decoder stacks.",
+                "B) Restricting self-attention to consider only a neighborhood of size 'r' around each output position.",
+                "C) Replacing the Adam optimizer with Stochastic Gradient Descent (SGD).",
+                "D) Removing the positional encoding from the input embeddings."
+            ],
+            "correct_answer": "B",
+            "explanation": "Restricting self-attention to a neighborhood of size 'r' reduces the computational complexity from O(n^2 * d) to O(r * n * d), where n is the sequence length and d is the representation dimension, making it more efficient for long sequences.",
+            "hints": [
+                "Consider the complexity per layer for different attention mechanisms.",
+                "Think about how to reduce the number of connections each position needs to attend to.",
+                "Refer to the section discussing improvements for very long sequences."
+            ]
+        },
+        {
+            "id": 2,
+            "question": "If a researcher wants to improve the parallelization of a sequence transduction model, which architecture would be MOST suitable based on the information provided in the text?",
+            "options": [
+                "A) A Recurrent Neural Network (RNN) with Long Short-Term Memory (LSTM) units.",
+                "B) A Convolutional Neural Network (CNN) with dilated convolutions.",
+                "C) A Transformer model relying entirely on attention mechanisms.",
+                "D) An End-to-End Memory Network with sequence-aligned recurrence."
+            ],
+            "correct_answer": "C",
+            "explanation": "The Transformer model eschews recurrence and convolutions, relying entirely on attention mechanisms, which allows for significantly more parallelization during training.",
+            "hints": [
+                "Consider the sequential operations required for each architecture.",
+                "Think about which models factor computation along symbol positions.",
+                "Refer to the introduction and background sections of the paper."
+            ]
+        },
+        {
+            "id": 3,
+            "question": "A data scientist is working on a machine translation task and notices that the dot products in the scaled dot-product attention mechanism are growing very large, leading to small gradients in the softmax function. According to the paper, what is the recommended solution to counteract this effect?",
+            "options": [
+                "A) Increase the learning rate of the Adam optimizer.",
+                "B) Scale the dot products by 1/sqrt(dk), where dk is the dimension of the keys.",
+                "C) Replace the ReLU activation function with a sigmoid function.",
+                "D) Remove the scaling factor from the dot-product attention."
+            ],
+            "correct_answer": "B",
+            "explanation": "The paper explicitly mentions scaling the dot products by 1/sqrt(dk) to counteract the effect of large dot products pushing the softmax function into regions with extremely small gradients.",
+            "hints": [
+                "Consider the section on Scaled Dot-Product Attention.",
+                "Think about how to prevent the softmax function from saturating.",
+                "Look for the formula used to scale the dot products."
+            ]
+        },
+        {
+            "id": 4,
+            "question": "A student is designing a Transformer model and wants to allow the model to attend to information from different representation subspaces at different positions. Which component of the Transformer architecture is specifically designed for this purpose?",
+            "options": [
+                "A) The position-wise feed-forward network.",
+                "B) The residual connections.",
+                "C) The multi-head attention mechanism.",
+                "D) The layer normalization."
+            ],
+            "correct_answer": "C",
+            "explanation": "Multi-head attention allows the model to jointly attend to information from different representation subspaces at different positions, which a single attention head would inhibit due to averaging.",
+            "hints": [
+                "Consider the section on Multi-Head Attention.",
+                "Think about the purpose of having multiple attention heads.",
+                "Look for the explanation of how multi-head attention enhances the model's capabilities."
+            ]
+        },
+        {
+            "id": 5,
+            "question": "If a researcher wants to apply the Transformer model to a task where the order of the sequence is crucial, but the model contains no recurrence or convolution, what mechanism should they use to provide information about the position of tokens?",
+            "options": [
+                "A) Residual connections.",
+                "B) Layer normalization.",
+                "C) Positional encoding.",
+                "D) Multi-head attention."
+            ],
+            "correct_answer": "C",
+            "explanation": "Since the Transformer contains no recurrence or convolution, positional encodings are added to the input embeddings to inject information about the relative or absolute position of the tokens in the sequence.",
+            "hints": [
+                "Consider the section on Positional Encoding.",
+                "Think about how the model can understand the order of words without recurrence.",
+                "Look for the mechanism that adds information about position to the embeddings."
+            ]
+        },
+        {
+            "id": 6,
+            "question": "A developer is implementing the decoder part of a Transformer model for a text generation task. To ensure that the predictions for a given position only depend on known outputs at previous positions, what modification should be made to the self-attention sub-layer in the decoder stack?",
+            "options": [
+                "A) Increase the dimensionality of the keys and values.",
+                "B) Employ residual connections around the sub-layer.",
+                "C) Mask out all values in the input of the softmax which correspond to illegal connections (future positions).",
+                "D) Remove the self-attention sub-layer altogether."
+            ],
+            "correct_answer": "C",
+            "explanation": "To preserve the auto-regressive property in the decoder, the self-attention sub-layer is modified by masking out all values in the input of the softmax that correspond to illegal connections, preventing the model from attending to subsequent positions.",
+            "hints": [
+                "Consider the section on the Decoder Stack.",
+                "Think about how to prevent the decoder from 'peeking' at future tokens.",
+                "Look for the explanation of how the self-attention sub-layer is modified in the decoder."
+            ]
+        },
+        {
+            "id": 7,
+            "question": "A machine learning engineer is experimenting with different dropout rates in a Transformer model. Based on the text, what is the expected impact of increasing the dropout rate on the model's performance?",
+            "options": [
+                "A) It will always improve the model's perplexity and BLEU score.",
+                "B) It will likely hurt perplexity but improve accuracy and BLEU score.",
+                "C) It will have no impact on the model's performance.",
+                "D) It will always decrease the model's training time."
+            ],
+            "correct_answer": "B",
+            "explanation": "The paper mentions that employing label smoothing (which is related to dropout in its effect) hurts perplexity, as the model learns to be more unsure, but improves accuracy and BLEU score. Similarly, increasing dropout can improve generalization and thus BLEU score, even if it hurts perplexity.",
+            "hints": [
+                "Consider the section on Regularization.",
+                "Think about the trade-off between perplexity and generalization.",
+                "Look for the discussion of label smoothing and its impact on performance."
+            ]
+        },
+        {
+            "id": 8,
+            "question": "A researcher is comparing the computational complexity of different layer types in sequence transduction models. According to the text, when is a self-attention layer faster than a recurrent layer?",
+            "options": [
+                "A) Always, regardless of the sequence length and representation dimensionality.",
+                "B) When the sequence length 'n' is smaller than the representation dimensionality 'd'.",
+                "C) When the sequence length 'n' is larger than the representation dimensionality 'd'.",
+                "D) Only when using restricted self-attention with a small neighborhood size 'r'."
+            ],
+            "correct_answer": "B",
+            "explanation": "The paper states that self-attention layers are faster than recurrent layers when the sequence length 'n' is smaller than the representation dimensionality 'd', which is often the case with sentence representations used by state-of-the-art models in machine translation.",
+            "hints": [
+                "Consider the section on Why Self-Attention.",
+                "Think about the computational complexity of self-attention and recurrent layers.",
+                "Look for the comparison of their speeds based on sequence length and dimensionality."
+            ]
+        },
+        {
+            "id": 9,
+            "question": "A team is training a Transformer model for English-to-German translation and wants to determine the optimal number of attention heads. Based on the variations explored in the paper, what is the expected impact of using too many attention heads?",
+            "options": [
+                "A) It will always improve the model's performance.",
+                "B) It will lead to a significant decrease in training time.",
+                "C) It will cause the model to overfit to the training data.",
+                "D) It can lead to a drop in quality compared to using an optimal number of heads."
+            ],
+            "correct_answer": "D",
+            "explanation": "The paper's experiments show that while single-head attention is worse than the best setting, quality also drops off with too many heads, suggesting that there is an optimal number of heads for a given task and model configuration.",
+            "hints": [
+                "Consider the section on Model Variations.",
+                "Think about the results of varying the number of attention heads.",
+                "Look for the impact of using too many heads on the model's BLEU score."
+            ]
+        },
+        {
+            "id": 10,
+            "question": "A researcher wants to apply the Transformer model to English constituency parsing. Based on the paper, what is a key advantage of the Transformer over RNN sequence-to-sequence models in this task, especially in small-data regimes?",
+            "options": [
+                "A) The Transformer requires significantly less training data than RNNs.",
+                "B) The Transformer can handle longer sequences more efficiently than RNNs.",
+                "C) The Transformer outperforms the BerkeleyParser even when training only on the WSJ training set, which RNNs struggle with.",
+                "D) The Transformer is inherently better at capturing long-range dependencies than RNNs."
+            ],
+            "correct_answer": "C",
+            "explanation": "The paper highlights that, in contrast to RNN sequence-to-sequence models, the Transformer outperforms the BerkeleyParser even when training only on the WSJ training set of 40K sentences, indicating a better performance in small-data regimes.",
+            "hints": [
+                "Consider the section on English Constituency Parsing.",
+                "Think about the limitations of RNNs in small-data scenarios.",
+                "Look for the comparison between the Transformer and other parsing models."
+            ]
+        }
+    ],
+    "chapter_name": "attention is all you need.pdf"
+}

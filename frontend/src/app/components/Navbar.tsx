@@ -13,9 +13,18 @@ import { useTheme } from 'next-themes';
 interface NavbarProps {
     onMenuClick: () => void;
     title?: string;
+    userRole: 'teacher' | 'student' | null;
+    onJoinClassClick?: () => void;
+    onClassroomsClick?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onMenuClick, title = "C.O.T.E.ai" }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+    onMenuClick,
+    title = "C.O.T.E.ai",
+    userRole,
+    onJoinClassClick,
+    onClassroomsClick
+}) => {
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
@@ -37,10 +46,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick, title = "C.O.T.E.ai
             </div>
 
             <div className="flex items-center gap-2">
-                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-yellow-500/10 text-yellow-600 rounded-full mr-2">
-                    <Zap size={16} fill="currentColor" />
-                    <span className="text-sm font-black">840 XP</span>
-                </div>
+                {userRole === 'student' && (
+                    <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-yellow-500/10 text-yellow-600 rounded-full mr-2">
+                        <Zap size={16} fill="currentColor" />
+                        <span className="text-sm font-black">840 XP</span>
+                    </div>
+                )}
                 <button
                     onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                     className="p-2 hover:bg-accent rounded-full transition-colors text-foreground/70"
@@ -48,10 +59,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onMenuClick, title = "C.O.T.E.ai
                 >
                     {mounted && (theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />)}
                 </button>
-                <button className="p-2 hover:bg-accent rounded-full transition-colors text-foreground/70">
+                <button
+                    onClick={onJoinClassClick}
+                    className="p-2 hover:bg-accent rounded-full transition-colors text-foreground/70"
+                >
                     <Plus size={22} />
                 </button>
-                <button className="p-2 hover:bg-accent rounded-full transition-colors text-foreground/70">
+                <button
+                    onClick={onClassroomsClick}
+                    className="p-2 hover:bg-accent rounded-full transition-colors text-foreground/70"
+                >
                     <Grid size={20} />
                 </button>
                 <button className="p-2 hover:bg-accent rounded-full transition-colors text-foreground/70 relative">

@@ -15,16 +15,6 @@ export const MaterialsHub: React.FC<MaterialsHubProps> = ({ topic, onBack, userR
     const [selectingLanguage, setSelectingLanguage] = useState(false);
     const [selectedLanguage, setSelectedLanguage] = useState('english');
 
-    if (userRole === 'teacher') {
-        return (
-            <MaterialView
-                topic={topic}
-                onBack={onBack}
-                userRole={userRole}
-                onUploadComplete={onUploadComplete}
-            />
-        );
-    }
 
     if (view === 'material') {
         return (
@@ -115,7 +105,7 @@ export const MaterialsHub: React.FC<MaterialsHubProps> = ({ topic, onBack, userR
                         </div>
                     </button>
 
-                    {/* AI Flashcards Button */}
+                    {/* AI Flashcards Button (Students only for now, or just generic hub) */}
                     <button
                         onClick={() => setSelectingLanguage(true)}
                         className="group relative p-10 bg-card border-2 border-border rounded-[2.5rem] hover:border-purple-500 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/5 flex flex-col items-center text-center space-y-6 overflow-hidden"
@@ -127,7 +117,7 @@ export const MaterialsHub: React.FC<MaterialsHubProps> = ({ topic, onBack, userR
                         </div>
 
                         <div className="space-y-3">
-                            <h3 className="text-3xl font-black tracking-tight">AI Revision</h3>
+                            <h3 className="text-3xl font-black tracking-tight tracking-tight">AI Revision</h3>
                             <p className="text-muted-foreground font-medium leading-relaxed">
                                 Quick topic-wise summaries for fast recall. Earn **20 XP** per card!
                             </p>
@@ -141,40 +131,42 @@ export const MaterialsHub: React.FC<MaterialsHubProps> = ({ topic, onBack, userR
             </div>
 
             {/* Language Selection Overlay */}
-            {selectingLanguage && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-background/80 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="w-full max-w-2xl bg-card border-2 border-primary/20 rounded-[2.5rem] p-10 shadow-2xl space-y-8">
-                        <div className="text-center space-y-2">
-                            <h3 className="text-3xl font-black tracking-tight">Select Revision Language</h3>
-                            <p className="text-muted-foreground font-medium">Explanations will be in your chosen language, technical terms stay in English.</p>
-                        </div>
+            {
+                selectingLanguage && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-background/80 backdrop-blur-md animate-in fade-in duration-300">
+                        <div className="w-full max-w-2xl bg-card border-2 border-primary/20 rounded-[2.5rem] p-10 shadow-2xl space-y-8">
+                            <div className="text-center space-y-2">
+                                <h3 className="text-3xl font-black tracking-tight">Select Revision Language</h3>
+                                <p className="text-muted-foreground font-medium">Explanations will be in your chosen language, technical terms stay in English.</p>
+                            </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {languages.map((lang) => (
-                                <button
-                                    key={lang.id}
-                                    onClick={() => {
-                                        setSelectedLanguage(lang.id);
-                                        setView('flashcards');
-                                        setSelectingLanguage(false);
-                                    }}
-                                    className="p-6 bg-secondary/50 border-2 border-transparent hover:border-primary rounded-3xl transition-all text-center space-y-2 group"
-                                >
-                                    <p className="text-xl font-bold group-hover:text-primary">{lang.label}</p>
-                                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">{lang.desc}</p>
-                                </button>
-                            ))}
-                        </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {languages.map((lang) => (
+                                    <button
+                                        key={lang.id}
+                                        onClick={() => {
+                                            setSelectedLanguage(lang.id);
+                                            setView('flashcards');
+                                            setSelectingLanguage(false);
+                                        }}
+                                        className="p-6 bg-secondary/50 border-2 border-transparent hover:border-primary rounded-3xl transition-all text-center space-y-2 group"
+                                    >
+                                        <p className="text-xl font-bold group-hover:text-primary">{lang.label}</p>
+                                        <p className="text-[10px] text-muted-foreground font-black uppercase tracking-tighter">{lang.desc}</p>
+                                    </button>
+                                ))}
+                            </div>
 
-                        <button
-                            onClick={() => setSelectingLanguage(false)}
-                            className="w-full py-4 text-muted-foreground font-bold hover:text-foreground transition-colors"
-                        >
-                            Cancel
-                        </button>
+                            <button
+                                onClick={() => setSelectingLanguage(false)}
+                                className="w-full py-4 text-muted-foreground font-bold hover:text-foreground transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Bottom Info Banner */}
             <div className="p-6 text-center text-muted-foreground/60">
@@ -182,6 +174,6 @@ export const MaterialsHub: React.FC<MaterialsHubProps> = ({ topic, onBack, userR
                     <GraduationCap size={16} /> Maximize your potential with AI-assisted learning.
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
