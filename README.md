@@ -9,6 +9,9 @@ C.O.T.E.ai bridges the gap between traditional teaching and personal AI tutoring
 ### Working demonstration of the application:
 -https://drive.google.com/drive/folders/1OztcflZcjAxdiGdIXdnaCSp2AGUkW6iZ
 
+### Frontend link: (ai-backend yet to be hosted)
+c-o-t-e-ai-6t25.vercel.app
+
 ## ✨ Features
 
 ### 👨‍🏫 Teacher Portal
