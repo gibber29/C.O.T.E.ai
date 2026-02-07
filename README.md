@@ -39,7 +39,7 @@ C.O.T.E.ai bridges the gap between traditional teaching and personal AI tutoring
 ├── api/                  # FastAPI Backend (Python)
 │   ├── ingestion_pipeline.py  # Advanced PDF processing and ingestion
 │   ├── retrieval_service.py   # RAG-based query engine using Gemini 2.0 Flash
-│   └── backend_upload_endpoint.py # API endpoints for file and session management
+│   └── main.py # API endpoints for file and session management
 ├── chroma_db/            # Vector database for high-speed retrieval
 └── uploads/              # Storage for classroom materials
 ```
@@ -67,7 +67,7 @@ C.O.T.E.ai bridges the gap between traditional teaching and personal AI tutoring
    ```
 4. Start the API:
    ```bash
-   uvicorn backend_upload_endpoint:app --reload
+   uvicorn main:app --reload
    ```
 
 ### Setting up the Frontend
