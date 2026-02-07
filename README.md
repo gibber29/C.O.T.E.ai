@@ -11,6 +11,7 @@ C.O.T.E.ai bridges the gap between traditional teaching and personal AI tutoring
 - **Material Management**: Seamlessly upload and organize educational PDFs for your classes.
 - **Performance Overview**: Track student progress and performance metrics at a glance.
 - **Classroom Insights**: View and manage the list of students present in your virtual classroom.
+- -**Subject Insights**: Teacher gets live updates from the assessments for understanding the misconceptions and concepts the students are lacking in.
 
 ### 🎓 Student Portal
 - **Live Document Summaries**: Instant access to key takeaways from uploaded materials.
