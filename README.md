@@ -29,6 +29,9 @@ C.O.T.E.ai bridges the gap between traditional teaching and personal AI tutoring
 - **Live Progress Dashboard**: Track your XP growth, weekly improvement metrics, and review recent mistakes
 - **C.O.T.E.ai Doubt Assistant**: A premium, glassmorphism-styled floating chatbot for instant doubt clarification using RAG.
 
+### Working demonstration of the application:
+-https://drive.google.com/drive/folders/1OztcflZcjAxdiGdIXdnaCSp2AGUkW6iZ
+
 ## 🏗️ Project Structure
 
 ```text
