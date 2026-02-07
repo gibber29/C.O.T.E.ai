@@ -50,7 +50,8 @@ export const MaterialsHub: React.FC<MaterialsHubProps> = ({ topic, onBack, userR
     const languages = [
         { id: 'english', label: 'English', desc: 'Full English summaries' },
         { id: 'hindi', label: 'Hindi', desc: 'हिन्दी script + English terms' },
-        { id: 'telugu', label: 'Telugu', desc: 'తెలుగు script + English terms' }
+        { id: 'telugu', label: 'Telugu', desc: 'తెలుగు script + English terms' },
+        { id: 'hinglish', label: 'Hinglish', desc: 'Hindi + English in Roman script' }
     ];
 
     return (

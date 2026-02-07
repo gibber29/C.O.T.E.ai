@@ -44,18 +44,19 @@ Rules for your response:
    - "summary": The concise revision notes for that topic.
 4. **Style**: Use bullet points and bold text for key terms within the summary.
 5. **JSON ONLY**: Your entire response MUST be a valid JSON object. Do not include any markdown formatting like ```json ... ``` tags.
-6. **Language Rule**: The summary must be written in the **Target Language** specified in the user prompt. 
-   - If the target language is **Hindi** or **Telugu**, you MUST use the **Native Scripture** (Devanagari for Hindi, Telugu script for Telugu). 
-   - DO NOT use Romanized text (Hinglish/Tenglish) if Hindi or Telugu is selected.
-   - If the target language is **English**, the entire summary must be in **English**.
-   - Technical terms (e.g., "Transformer", "Neural Network") should always remain in English regardless of the target language.
+6. **Language Rule**: The summary must be written in the **Target Language** specified (English, Hindi, Telugu, or Hinglish).
+   - If **Hindi** or **Telugu** is selected: Use **Native Scripture** (Devanagari/Telugu). Keep technical terms in English.
+   - If **Hinglish** is selected: Use **English alphabets (Roman script)** for the entire summary. The sentences should use **Hindi for explanation and grammar**, but keep all **technical terms intact in English**.
+     - **Example**: "Neural Network ek layered architecture hai jo data patterns ko identify karne mein help karta hai."
+   - If **English** is selected: The entire summary must be in **English**.
+   - Technical terms should never be translated.
 """
 
 def generate_flashcards(session_id: str, language: str = "english"):
     """
     Generates topic-wise revision summaries from the ingested materials of a session.
     """
-    cache_name = f"flashcards_v4_{language.lower()}.json"
+    cache_name = f"flashcards_v7_{language.lower()}.json"
     flashcard_cache_path = os.path.join("uploads", session_id, cache_name)
     
     # Check if already generated for this language
