@@ -10,3 +10,5 @@ python-dotenv
 tenacity
 google-generativeai
 pypdf
+unstructured
+unstructured[pdf]
