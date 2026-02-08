@@ -7,11 +7,13 @@
 C.O.T.E.ai bridges the gap between traditional teaching and personal AI tutoring, providing teachers with powerful management tools and students with dynamic, adaptive learning materials.
 
 ### Working demonstration of the application:
--https://drive.google.com/drive/folders/1OztcflZcjAxdiGdIXdnaCSp2AGUkW6iZ
+https://drive.google.com/drive/folders/1OztcflZcjAxdiGdIXdnaCSp2AGUkW6iZ
 
 ### Frontend link: (ai-backend yet to be hosted)
 https://c-o-t-e-ai-6t25.vercel.app
 
+### PPT detailing the project: 
+https://www.canva.com/design/DAHAoh-Fiow/ZIRrF1_xktRzTTpNgcz1Bw/edit?utm_content=DAHAoh-Fiow&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
 
 ## ✨ Features
 
